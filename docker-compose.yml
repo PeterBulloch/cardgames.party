@@ -1,0 +1,14 @@
+services:
+  cards:
+    build: .
+    image: cards-scanner
+    ports:
+      # Defaults to loopback so a misconfigured host cannot expose this to the internet.
+      # Host 443 keeps the URL port-free; the container still listens unprivileged.
+      - "${CARDS_BIND_IP:-127.0.0.1}:${CARDS_PORT:-443}:8443"
+    volumes:
+      - certs:/certs
+    restart: unless-stopped
+
+volumes:
+  certs:

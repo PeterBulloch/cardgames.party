@@ -1,0 +1,169 @@
+:root {
+    color-scheme: dark;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #14161a;
+    color: #e8eaed;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+.app {
+    max-width: 32rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem;
+}
+
+h2 {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9aa0a6;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.count {
+    background: #2a2f36;
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.8rem;
+}
+
+.status {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #9aa0a6;
+}
+
+.status--scanning {
+    color: #7ee2a8;
+}
+
+.status--unsupported,
+.status--error {
+    color: #f5b06a;
+}
+
+.error {
+    background: #3a1f22;
+    border: 1px solid #6b2f35;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.controls {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+}
+
+button {
+    flex: 1;
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.6rem;
+    background: #4a8cff;
+    color: #fff;
+    cursor: pointer;
+}
+
+button:disabled {
+    background: #2a2f36;
+    color: #6b7076;
+    cursor: not-allowed;
+}
+
+button.secondary {
+    flex: 0 0 auto;
+    background: #2a2f36;
+    color: #e8eaed;
+}
+
+.empty {
+    color: #6b7076;
+}
+
+.scans {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.scans>li {
+    background: #1c1f24;
+    border: 1px solid #2a2f36;
+    border-radius: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.35rem 0.75rem;
+}
+
+.scans code {
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    word-break: break-all;
+}
+
+.scans time {
+    color: #9aa0a6;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.records {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding-left: 1.1rem;
+    color: #9aa0a6;
+    font-size: 0.85rem;
+}
+
+.share {
+    margin-top: 2rem;
+    border-top: 1px solid #2a2f36;
+    padding-top: 1rem;
+}
+
+.share summary {
+    cursor: pointer;
+    color: #9aa0a6;
+    font-size: 0.9rem;
+}
+
+.share>code {
+    display: block;
+    margin-top: 0.75rem;
+    text-align: center;
+    color: #9aa0a6;
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+/* White quiet zone keeps the code scannable against the dark theme. */
+.qr {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    background: #fff;
+    padding: 0.75rem;
+    border-radius: 0.6rem;
+}

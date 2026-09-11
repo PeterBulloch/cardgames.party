@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { clearScans, fetchScans, postScan } from './api'
+import { cardImages, cardLabel, cardNameFor, preloadCardImages } from './cards'
 import { useNfcScanner } from './useNfcScanner'
 import type { NdefRecordDto, Scan } from './types'
 
@@ -29,6 +30,8 @@ export default function App() {
     }, [])
 
     const { status, error, start, stop, isSupported } = useNfcScanner(handleScan)
+
+    useEffect(preloadCardImages, [])
 
     useEffect(() => {
         let cancelled = false
@@ -101,24 +104,38 @@ export default function App() {
                     <p className="empty">No scans yet.</p>
                 ) : (
                     <ul className="scans">
-                        {scans.map((scan) => (
-                            <li key={scan.id}>
-                                <code>{scan.serialNumber}</code>
-                                <time dateTime={scan.receivedAt}>
-                                    {new Date(scan.receivedAt).toLocaleTimeString()}
-                                </time>
-                                {scan.records.length > 0 && (
-                                    <ul className="records">
-                                        {scan.records.map((record, index) => (
-                                            <li key={index}>
-                                                {record.recordType}
-                                                {record.text ? `: ${record.text}` : ''}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </li>
-                        ))}
+                        {scans.map((scan) => {
+                            const name = cardNameFor(scan)
+                            const image = name ? cardImages[name] : undefined
+                            const label = name ? cardLabel(name) : ''
+                            return (
+                                <li key={scan.id}>
+                                    {image ? (
+                                        <figure className="card">
+                                            <img src={image} alt={label} />
+                                            <figcaption>{label}</figcaption>
+                                        </figure>
+                                    ) : (
+                                        <>
+                                            <code>{scan.serialNumber}</code>
+                                            {scan.records.length > 0 && (
+                                                <ul className="records">
+                                                    {scan.records.map((record, index) => (
+                                                        <li key={index}>
+                                                            {record.recordType}
+                                                            {record.text ? `: ${record.text}` : ''}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </>
+                                    )}
+                                    <time dateTime={scan.receivedAt}>
+                                        {new Date(scan.receivedAt).toLocaleTimeString()}
+                                    </time>
+                                </li>
+                            )
+                        })}
                     </ul>
                 )}
             </section>

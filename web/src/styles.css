@@ -129,6 +129,26 @@ button.secondary {
     font-variant-numeric: tabular-nums;
 }
 
+.card {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.card img {
+    width: 4.5rem;
+    height: auto;
+    background: #fff;
+    border-radius: 0.35rem;
+    padding: 0.2rem;
+}
+
+.card figcaption {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
 .records {
     grid-column: 1 / -1;
     margin: 0;

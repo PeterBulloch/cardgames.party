@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { clearScans, fetchScans, postScan } from './api'
-import { cardImages, cardLabel, cardNameFor, preloadCardImages } from './cards'
+import { cardImages, cardLabel, cardNameFor, cardNames, preloadCardImages } from './cards'
 import { useNfcScanner } from './useNfcScanner'
+import { useNfcWriter } from './useNfcWriter'
 import type { NdefRecordDto, Scan } from './types'
 
 const POLL_INTERVAL_MS = 2000
@@ -18,6 +19,7 @@ function mergeScan(scans: Scan[], incoming: Scan): Scan[] {
 export default function App() {
     const [scans, setScans] = useState<Scan[]>([])
     const [apiError, setApiError] = useState<string | null>(null)
+    const [cardToWrite, setCardToWrite] = useState(cardNames[0] ?? '')
 
     const handleScan = useCallback(async (serialNumber: string, records: NdefRecordDto[]) => {
         try {
@@ -30,6 +32,7 @@ export default function App() {
     }, [])
 
     const { status, error, start, stop, isSupported } = useNfcScanner(handleScan)
+    const writer = useNfcWriter()
 
     useEffect(preloadCardImages, [])
 
@@ -139,6 +142,52 @@ export default function App() {
                     </ul>
                 )}
             </section>
+
+            <details className="writer">
+                <summary>Write a card to a tag</summary>
+                <div className="writer__body">
+                    {cardToWrite && cardImages[cardToWrite] && (
+                        <img
+                            className="writer__preview"
+                            src={cardImages[cardToWrite]}
+                            alt={cardLabel(cardToWrite)}
+                        />
+                    )}
+                    <div className="writer__controls">
+                        <select
+                            value={cardToWrite}
+                            onChange={(event) => setCardToWrite(event.target.value)}
+                            disabled={writer.status === 'writing'}
+                        >
+                            {cardNames.map((name) => (
+                                <option key={name} value={name}>
+                                    {cardLabel(name)}
+                                </option>
+                            ))}
+                        </select>
+                        {writer.status === 'writing' ? (
+                            <button type="button" className="secondary" onClick={writer.cancel}>
+                                Cancel
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => void writer.write(cardToWrite)}
+                                disabled={!writer.isSupported || !cardToWrite}
+                            >
+                                Write tag
+                            </button>
+                        )}
+                    </div>
+                    <p className="status">
+                        {writer.status === 'unsupported' &&
+                            'Web NFC is unavailable. Use Chrome on Android over HTTPS.'}
+                        {writer.status === 'writing' && 'Hold a blank tag to the back of the phone.'}
+                        {writer.status === 'written' && `Wrote ${cardToWrite}.`}
+                    </p>
+                    {writer.error && <p className="error">{writer.error}</p>}
+                </div>
+            </details>
 
             <details className="share">
                 <summary>Open on another phone</summary>

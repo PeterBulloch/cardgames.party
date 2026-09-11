@@ -16,6 +16,20 @@ export const cardImages: Record<string, string> = Object.fromEntries(
 
 const CARD_PATTERN = /^CARD_[A-Z]+(_[A-Z]+)?$/
 
+const SUIT_ORDER = ['SPADE', 'HEART', 'DIAMOND', 'CLUB']
+const RANK_ORDER = [
+    'ACE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN',
+    'JACK', 'QUEEN', 'KING',
+]
+
+function sortKey(name: string): number {
+    if (name === 'CARD_JOKER') return Number.MAX_SAFE_INTEGER
+    const [, suit, rank] = name.split('_')
+    return SUIT_ORDER.indexOf(suit) * 100 + RANK_ORDER.indexOf(rank)
+}
+
+export const cardNames: string[] = Object.keys(cardImages).sort((a, b) => sortKey(a) - sortKey(b))
+
 function normalise(value: string | null | undefined): string | null {
     if (!value) return null
     const name = value.trim().toUpperCase()

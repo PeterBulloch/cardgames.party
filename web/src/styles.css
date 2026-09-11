@@ -163,6 +163,50 @@ button.secondary {
     padding-top: 1rem;
 }
 
+.writer {
+    margin-top: 2rem;
+    border-top: 1px solid #2a2f36;
+    padding-top: 1rem;
+}
+
+.writer summary {
+    cursor: pointer;
+    color: #9aa0a6;
+    font-size: 0.9rem;
+}
+
+.writer__body {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.writer__preview {
+    width: 7rem;
+    height: auto;
+    align-self: center;
+    background: #fff;
+    border-radius: 0.4rem;
+    padding: 0.25rem;
+}
+
+.writer__controls {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.writer select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.9rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.6rem;
+    border: 1px solid #2a2f36;
+    background: #1c1f24;
+    color: #e8eaed;
+}
+
 .share summary {
     cursor: pointer;
     color: #9aa0a6;

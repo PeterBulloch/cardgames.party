@@ -27,11 +27,11 @@ can be added alongside it.
 
 ## Running in production
 
-Cards ships as a single Docker image that serves the web app and API over **plain HTTP on
-port 8000**. Put it behind anything that terminates HTTPS — a hosting platform, Caddy, nginx,
-Traefik — and it just works. HTTPS matters: phones only allow NFC scanning on secure pages.
+Cards ships as a single Docker image that serves the web app and API over **plain HTTP**. Put it
+behind anything that terminates HTTPS — a hosting platform, Caddy, nginx, Traefik — and it just
+works. HTTPS matters: phones only allow NFC scanning on secure pages.
 
-With Docker Compose (binds to `127.0.0.1:8000` for a reverse proxy on the same host):
+With Docker Compose (publishes host port `80` to container port `8000` on all interfaces):
 
 ```sh
 docker compose up -d --build
@@ -41,19 +41,26 @@ Or with plain Docker:
 
 ```sh
 docker build -t cards .
-docker run -d --name cards --restart unless-stopped -p 8000:8000 cards
+docker run -d --name cards --restart unless-stopped -p 80:8000 cards
 ```
 
-Check it is up with `curl http://127.0.0.1:8000/api/health`, which also reports the running
+Check it is up with `curl http://127.0.0.1/api/health`, which also reports the running
 version. The image has a built-in health check.
+
+To test from another device on the same LAN, start the Compose service and open
+`http://<server-lan-ip>/` from that device. For example, if the server is
+`192.168.0.100`, use `http://192.168.0.100/`. Allow inbound TCP port `80` through the server's
+firewall on its private network profile. This plain-HTTP test is suitable for checking network
+reachability; phones require HTTPS for NFC.
 
 ### Reverse proxy
 
-The proxy must pass WebSocket upgrades for `/api/ws`. Caddy does this automatically:
+The proxy must pass WebSocket upgrades for `/api/ws`. For a proxy on another LAN host, forward to
+the Cards server's LAN address on port `80`. Caddy does this automatically:
 
 ```caddyfile
 cards.example.com {
-    reverse_proxy 127.0.0.1:8000
+  reverse_proxy 192.168.0.100:80
 }
 ```
 
@@ -65,8 +72,8 @@ tables are not disconnected.
 | Variable              | Default     | Purpose                                                              |
 | --------------------- | ----------- | -------------------------------------------------------------------- |
 | `PORT`                | `8000`      | Port the server listens on inside the container                     |
-| `CARDS_BIND_IP`       | `127.0.0.1` | Host address Compose publishes on; use `0.0.0.0` only behind a firewall or proxy |
-| `CARDS_PORT`          | `8000`      | Host port Compose publishes                                          |
+| `CARDS_BIND_IP`       | `0.0.0.0`   | Host address Compose publishes on                                   |
+| `CARDS_PORT`          | `80`        | Host port Compose publishes                                          |
 | `FORWARDED_ALLOW_IPS` | `127.0.0.1` | Proxies trusted for `X-Forwarded-*` headers (Uvicorn setting)        |
 | `CARDS_TLS`           | *(empty)*   | Set to `local-ip` for LAN HTTPS; see [CONTRIBUTING.md](CONTRIBUTING.md) |
 

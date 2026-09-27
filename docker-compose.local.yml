@@ -6,8 +6,9 @@ services:
     environment:
       CARDS_TLS: local-ip
       PORT: "8443"
-    ports: !override
+    ports:
       # Host 443 keeps the URL port-free; the container still listens unprivileged.
+      !override
       - "${CARDS_BIND_IP:-127.0.0.1}:${CARDS_PORT:-443}:8443"
     volumes:
       - certs:/certs

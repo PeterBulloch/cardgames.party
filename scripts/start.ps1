@@ -18,8 +18,8 @@ function Test-PrivateIPv4 {
     param([string]$Address)
     $o = $Address.Split('.') | ForEach-Object { [int]$_ }
     return ($o[0] -eq 10) -or
-           ($o[0] -eq 192 -and $o[1] -eq 168) -or
-           ($o[0] -eq 172 -and $o[1] -ge 16 -and $o[1] -le 31)
+    ($o[0] -eq 192 -and $o[1] -eq 168) -or
+    ($o[0] -eq 172 -and $o[1] -ge 16 -and $o[1] -le 31)
 }
 
 try {
@@ -27,10 +27,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Docker is not running. Start Docker Desktop and retry.' }
 
     $lanIp = Get-NetIPConfiguration |
-        Where-Object { $null -ne $_.IPv4DefaultGateway } |
-        ForEach-Object { $_.IPv4Address.IPAddress } |
-        Where-Object { Test-PrivateIPv4 $_ } |
-        Select-Object -First 1
+    Where-Object { $null -ne $_.IPv4DefaultGateway } |
+    ForEach-Object { $_.IPv4Address.IPAddress } |
+    Where-Object { Test-PrivateIPv4 $_ } |
+    Select-Object -First 1
 
     if (-not $lanIp) {
         $found = (Get-NetIPConfiguration |

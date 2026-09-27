@@ -453,6 +453,68 @@ select {
     font-weight: 700;
 }
 
+.saved {
+    margin-left: 0.6rem;
+    color: #7ee2a8;
+    font-weight: 600;
+}
+
+.card-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.card-picker__preview {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+}
+
+.card-picker__suits,
+.card-picker__ranks {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.card-picker__suits {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.card-picker__ranks {
+    grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+}
+
+.card-picker button {
+    padding: 0.6rem 0;
+    background: #1c1f24;
+    border: 1px solid #2a2f36;
+    color: #e8eaed;
+    font-size: 1.05rem;
+}
+
+.card-picker .suit {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.card-picker .suit--red {
+    color: #ff6b6b;
+}
+
+.card-picker button.is-selected {
+    background: #4a8cff;
+    border-color: #4a8cff;
+    color: #fff;
+}
+
+.card-picker button:disabled {
+    background: transparent;
+    color: #3a3f46;
+    text-decoration: line-through;
+}
+
 .editable-number {
     display: inline-flex;
     align-items: center;

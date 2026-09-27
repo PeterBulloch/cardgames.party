@@ -16,8 +16,8 @@ export const cardImages: Record<string, string> = Object.fromEntries(
 
 const CARD_PATTERN = /^CARD_[A-Z]+(_[A-Z]+)?$/
 
-const SUIT_ORDER = ['SPADE', 'HEART', 'DIAMOND', 'CLUB']
-const RANK_ORDER = [
+export const SUIT_ORDER = ['SPADE', 'HEART', 'DIAMOND', 'CLUB']
+export const RANK_ORDER = [
     'ACE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN',
     'JACK', 'QUEEN', 'KING',
 ]

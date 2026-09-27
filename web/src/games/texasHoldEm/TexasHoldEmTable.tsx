@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { cardFromTag, cardLabel, cardNames } from '../../cards'
+import CardPicker from '../../CardPicker'
 import EditableNumber from '../../EditableNumber'
 import PlayingCard, { EmptyCardSlot } from '../../PlayingCard'
 import { useNfcScanner } from '../../useNfcScanner'
@@ -22,7 +23,7 @@ function describeDeal(state: LobbyState, target: DealTarget): string {
 }
 
 export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHoldEmView, TexasHoldEmAction>) {
-    const [manualCard, setManualCard] = useState(DECK[0] ?? '')
+    const [manualCard, setManualCard] = useState<string | null>(null)
     const [scanError, setScanError] = useState<string | null>(null)
 
     const handleScan = useCallback(
@@ -201,36 +202,41 @@ export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHo
                     {game.phase === 'dealing' && game.next_deal && (
                         <>
                             <p className="status">Deal the next card {describeDeal(state, game.next_deal)}:</p>
+                            <CardPicker
+                                cards={DECK}
+                                unavailable={visibleCards}
+                                value={manualCard}
+                                onChange={setManualCard}
+                            />
                             <div className="controls">
-                                <select value={manualCard} onChange={(e) => setManualCard(e.target.value)}>
-                                    {DECK.map((name) => (
-                                        <option key={name} value={name} disabled={visibleCards.has(name)}>
-                                            {cardLabel(name)}
-                                        </option>
-                                    ))}
-                                </select>
                                 <button
                                     type="button"
-                                    onClick={() => send({ type: 'deal_card', card: manualCard })}
+                                    onClick={() => {
+                                        if (!manualCard) return
+                                        send({ type: 'deal_card', card: manualCard })
+                                        setManualCard(null)
+                                    }}
                                     disabled={!manualCard || visibleCards.has(manualCard)}
                                 >
-                                    Deal
+                                    Deal {manualCard ? cardLabel(manualCard) : ''}
                                 </button>
                             </div>
                         </>
                     )}
 
-                    <div className="controls">
-                        {scanner.status === 'scanning' ? (
-                            <button type="button" onClick={scanner.stop}>
-                                Stop scanning
-                            </button>
-                        ) : (
-                            <button type="button" onClick={() => void scanner.start()} disabled={!scanner.isSupported}>
-                                {scanner.isSupported ? 'Scan cards' : 'NFC unavailable'}
-                            </button>
-                        )}
-                    </div>
+                    {scanner.isSupported && (
+                        <div className="controls">
+                            {scanner.status === 'scanning' ? (
+                                <button type="button" onClick={scanner.stop}>
+                                    Stop scanning
+                                </button>
+                            ) : (
+                                <button type="button" onClick={() => void scanner.start()}>
+                                    Scan cards
+                                </button>
+                            )}
+                        </div>
+                    )}
                     {scanner.status === 'scanning' && (
                         <p className="status status--scanning">Scanned cards are dealt to the next position automatically.</p>
                     )}

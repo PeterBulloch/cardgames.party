@@ -1,5 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import type { BlindSettings, TexasHoldEmAction } from './types'
+
+const SAVED_NOTICE_MS = 2500
 
 interface Props {
     blinds: BlindSettings
@@ -23,8 +25,30 @@ function wholeNumber(text: string, minimum: number): number | null {
     return text.trim() !== '' && Number.isInteger(value) && value >= minimum ? value : null
 }
 
+function sameBlinds(a: BlindSettings, b: BlindSettings): boolean {
+    return a.small === b.small && a.big === b.big && a.auto_double === b.auto_double && a.double_every === b.double_every
+}
+
 export default function BlindsForm({ blinds, send }: Props) {
     const [draft, setDraft] = useState<Draft>(() => toDraft(blinds))
+    const [open, setOpen] = useState(false)
+    const [pending, setPending] = useState<BlindSettings | null>(null)
+    const [saved, setSaved] = useState(false)
+
+    // Confirm only once a server snapshot carries the submitted values; errors surface in the lobby banner.
+    useEffect(() => {
+        if (pending && sameBlinds(pending, blinds)) {
+            setPending(null)
+            setOpen(false)
+            setSaved(true)
+        }
+    }, [blinds, pending])
+
+    useEffect(() => {
+        if (!saved) return
+        const timer = setTimeout(() => setSaved(false), SAVED_NOTICE_MS)
+        return () => clearTimeout(timer)
+    }, [saved])
 
     const small = wholeNumber(draft.small, 0)
     const big = wholeNumber(draft.big, 0)
@@ -34,20 +58,39 @@ export default function BlindsForm({ blinds, send }: Props) {
     const submit = (event: FormEvent) => {
         event.preventDefault()
         if (!valid || small === null || big === null) return
-        send({
-            type: 'set_blinds',
+        const next: BlindSettings = {
             small,
             big,
             auto_double: draft.auto_double,
             double_every: doubleEvery ?? blinds.double_every,
-        })
+        }
+        setPending(next)
+        send({ type: 'set_blinds', ...next })
     }
 
-    const update = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }))
+    const update = (patch: Partial<Draft>) => {
+        setPending(null)
+        setDraft((current) => ({ ...current, ...patch }))
+    }
 
     return (
-        <details className="writer" onToggle={() => setDraft(toDraft(blinds))}>
-            <summary>Blinds settings</summary>
+        <details
+            className="writer"
+            open={open}
+            onToggle={(event) => {
+                const isOpen = event.currentTarget.open
+                setOpen(isOpen)
+                if (isOpen) {
+                    setDraft(toDraft(blinds))
+                    setPending(null)
+                    setSaved(false)
+                }
+            }}
+        >
+            <summary>
+                Blinds settings
+                {saved && <span className="saved" role="status">Saved</span>}
+            </summary>
             <form className="form" onSubmit={submit}>
                 <div className="controls">
                     <label>
@@ -94,8 +137,8 @@ export default function BlindsForm({ blinds, send }: Props) {
                 {small !== null && big !== null && big < small && (
                     <p className="hint">The big blind cannot be smaller than the small blind.</p>
                 )}
-                <button type="submit" disabled={!valid}>
-                    Save blinds
+                <button type="submit" disabled={!valid || pending !== null}>
+                    {pending ? 'Saving…' : 'Save blinds'}
                 </button>
             </form>
         </details>

@@ -74,15 +74,14 @@ class Room:
             raise LobbyError(409, "All player seats are taken")
 
         member = Player(name=name, role=role)
-        if member.is_seated:
-            self.game.add_seat(member.id)
+        self.game.add_member(member)
         self.members[member.id] = member
         self.touch()
         return member
 
     def remove_player(self, member: Player) -> None:
         if self.members.pop(member.id, None) is not None:
-            self.game.remove_seat(member.id)
+            self.game.remove_member(member)
             self.touch()
 
     def connect(self, connection: Any) -> None:
@@ -118,7 +117,7 @@ class Room:
             self.remove_player(member)
             return action
         else:
-            self.game.apply(action, member)
+            self.game.perform(action, member)
         self.touch()
         return action
 

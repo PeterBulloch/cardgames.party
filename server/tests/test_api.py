@@ -59,8 +59,13 @@ def test_socket_flow(client: TestClient) -> None:
         def act(ws, who, seq, action):
             ws.send_json({"lobby": who["lobby_id"], "player": who["member_id"], "seq": seq, "action": action})
 
-        act(dealer_ws, dealer, 1, {"type": "deal_card", "card": "CARD_SPADE_ACE",
-                                   "target": {"kind": "seat", "member_id": bob["member_id"]}})
+        act(dealer_ws, dealer, 1, {"type": "start_hand"})
+        assert dealer_ws.receive_json()["type"] == "ack"
+        dealer_ws.receive_json()
+        alice_ws.receive_json()
+
+        # Heads-up, Alice has the button, so the first card goes to Bob.
+        act(dealer_ws, dealer, 2, {"type": "deal_card", "card": "CARD_SPADE_ACE"})
         assert dealer_ws.receive_json()["type"] == "ack"
         dealer_state = dealer_ws.receive_json()
         alice_state = alice_ws.receive_json()
@@ -73,11 +78,11 @@ def test_socket_flow(client: TestClient) -> None:
         assert bob_cards(alice_state)["cards"] is None
         assert bob_cards(alice_state)["card_count"] == 1
 
-        act(dealer_ws, dealer, 1, {"type": "next_stage"})
+        act(dealer_ws, dealer, 2, {"type": "undo"})
         error = dealer_ws.receive_json()
-        assert error == {"type": "error", "seq": 1, "message": "Stale or duplicate message ignored"}
+        assert error == {"type": "error", "seq": 2, "message": "Stale or duplicate message ignored"}
 
-        act(alice_ws, dealer, 1, {"type": "next_stage"})
+        act(alice_ws, dealer, 1, {"type": "undo"})
         assert alice_ws.receive_json()["type"] == "error"
 
 

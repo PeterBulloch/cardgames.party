@@ -78,19 +78,23 @@ The homepage is the lobby; the original scanner and tag writer live at `/scanner
 ### Lobbies
 
 Roles: `player` (sees own hand and public cards, can act), `dealer` (sees everything, can
-act), `observer` (sees everything, cannot act, can switch to a public-only view). Any acting
-role may deal to any seat, mirroring a real table. Lobbies are deleted after 60 minutes with
-no connected clients or 60 minutes with no activity.
+act), `observer` (sees everything, cannot act, can switch to a public-only view). Lobbies are
+deleted after 60 minutes with no connected clients or 60 minutes with no activity.
 
 The WebSocket's first frame must be `{"type": "hello", "token": "..."}`. Actions are then sent as:
 
 ```json
 {"lobby": "<lobby_id>", "player": "<member_id>", "seq": 1, "sent_at": "<iso time>",
- "action": {"type": "deal_card", "card": "CARD_SPADE_ACE", "target": {"kind": "seat", "member_id": "..."}}}
+ "action": {"type": "deal_card", "card": "CARD_SPADE_ACE"}}
 ```
 
-Action types: `deal_card` (target `seat`, `board` or `burn`), `return_card`, `fold`, `unfold`,
-`next_stage`, `new_hand`, `set_view` (observers), `leave`. The server replies with `ack` or
+Lobby actions: `set_view` (observers), `leave`. Any game: `undo` (steps back one action; repeatable,
+cleared when someone joins or leaves). Texas Hold'em: `start_hand`, `deal_card` (the server
+decides whether it goes to the next seat, the burn pile or the board), and `fold` / `check` /
+`call` / `bet` / `raise` with the `member_id` of the player on turn. Any player or dealer may
+submit a move, but only for whoever's turn it is, and only moves legal at that moment. The
+button rotates each hand and sets the blinds; a member with the dealer role handles the cards
+without taking a seat. The server replies with `ack` or
 `error` for the sender's `seq`, then pushes `{"type": "state", "version", "updated_at", "state"}`
 to every client, filtered per viewer. `version` increases with every change so clients discard
 older snapshots; a `seq` that does not increase on a connection is ignored as a replay.

@@ -433,6 +433,26 @@ select {
     box-shadow: 0 0 0 1px #7ee2a8;
 }
 
+.seat--to-act {
+    border-color: #f5b06a;
+    box-shadow: 0 0 0 1px #f5b06a;
+}
+
+.turn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0 0.25rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.badge--button {
+    background: #e8eaed;
+    color: #14161a;
+    font-weight: 700;
+}
+
 .seat__head {
     display: flex;
     align-items: center;

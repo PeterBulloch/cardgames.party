@@ -5,54 +5,24 @@ from pydantic import Field, TypeAdapter
 from ...models import CardCode, MemberId, Strict
 
 
-class SeatTarget(Strict):
-    kind: Literal["seat"]
-    member_id: MemberId
-
-
-class BoardTarget(Strict):
-    kind: Literal["board"]
-
-
-class BurnTarget(Strict):
-    kind: Literal["burn"]
-
-
-Target = Annotated[Union[SeatTarget, BoardTarget, BurnTarget], Field(discriminator="kind")]
+class StartHand(Strict):
+    type: Literal["start_hand"]
 
 
 class DealCard(Strict):
+    """The server decides where the card goes: the next seat, the burn pile or the board."""
+
     type: Literal["deal_card"]
     card: CardCode
-    target: Target
 
 
-class ReturnCard(Strict):
-    type: Literal["return_card"]
-    card: CardCode
+class BettingAction(Strict):
+    """A betting decision for the player whose turn it is; any acting member may submit it."""
 
-
-class Fold(Strict):
-    type: Literal["fold"]
+    type: Literal["fold", "check", "call", "bet", "raise"]
     member_id: MemberId
-
-
-class Unfold(Strict):
-    type: Literal["unfold"]
-    member_id: MemberId
-
-
-class NextStage(Strict):
-    type: Literal["next_stage"]
-
-
-class NewHand(Strict):
-    type: Literal["new_hand"]
 
 
 TexasHoldEmAction = TypeAdapter(
-    Annotated[
-        Union[DealCard, ReturnCard, Fold, Unfold, NextStage, NewHand],
-        Field(discriminator="type"),
-    ]
+    Annotated[Union[StartHand, DealCard, BettingAction], Field(discriminator="type")]
 )

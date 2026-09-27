@@ -1,0 +1,16 @@
+# LAN override: HTTPS with the public local-ip.sh certificate so phones get a secure context.
+# Used by scripts/start.ps1: docker compose -f docker-compose.yml -f docker-compose.local.yml up
+services:
+  cards:
+    image: cards-local
+    environment:
+      CARDS_TLS: local-ip
+      PORT: "8443"
+    ports: !override
+      # Host 443 keeps the URL port-free; the container still listens unprivileged.
+      - "${CARDS_BIND_IP:-127.0.0.1}:${CARDS_PORT:-443}:8443"
+    volumes:
+      - certs:/certs
+
+volumes:
+  certs:

@@ -299,6 +299,12 @@ select {
     color: #9aa0a6;
 }
 
+.version {
+    text-align: center;
+    color: #6b7076;
+    font-size: 0.8rem;
+}
+
 .table-header {
     display: flex;
     justify-content: space-between;

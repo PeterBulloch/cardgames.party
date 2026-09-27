@@ -1,7 +1,9 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Builds and starts the card scanner in Docker, then prints the URL to open on the phone.
+    Builds and starts Cards on the LAN over local-ip.sh HTTPS, then prints the URL to open on phones.
+.DESCRIPTION
+    For local development and home use. Production deployments use docker-compose.yml alone.
 #>
 [CmdletBinding()]
 param(
@@ -57,7 +59,7 @@ passthrough port; move it to a normal LAN port and retry.
 
     $env:CARDS_BIND_IP = $lanIp
     $env:CARDS_PORT = $Port
-    $composeArgs = @('compose', 'up', '--build')
+    $composeArgs = @('compose', '-f', 'docker-compose.yml', '-f', 'docker-compose.local.yml', 'up', '--build')
     if ($Detach) { $composeArgs += '--detach' }
     docker @composeArgs
 }

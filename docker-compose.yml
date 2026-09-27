@@ -1,14 +1,10 @@
+# Production: plain HTTP on port 8000, for a platform or reverse proxy that terminates HTTPS.
+# LAN use with local-ip.sh certificates layers docker-compose.local.yml on top (see CONTRIBUTING.md).
 services:
   cards:
     build: .
-    image: cards-scanner
+    image: cards
     ports:
-      # Defaults to loopback so a misconfigured host cannot expose this to the internet.
-      # Host 443 keeps the URL port-free; the container still listens unprivileged.
-      - "${CARDS_BIND_IP:-127.0.0.1}:${CARDS_PORT:-443}:8443"
-    volumes:
-      - certs:/certs
+      # Loopback by default so only a reverse proxy on this host can reach the plain-HTTP port.
+      - "${CARDS_BIND_IP:-127.0.0.1}:${CARDS_PORT:-8000}:8000"
     restart: unless-stopped
-
-volumes:
-  certs:

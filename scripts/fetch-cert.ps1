@@ -39,4 +39,4 @@ $label = $lanIp -replace '\.', '-'
 Write-Host ''
 Write-Host "LAN IP:   $lanIp"
 Write-Host "Hostname: $label.local-ip.sh"
-Write-Host "Open on the phone: https://$label.local-ip.sh:8443" -ForegroundColor Cyan
+Write-Host "Open the Vite dev server on the phone: https://$label.local-ip.sh:5173" -ForegroundColor Cyan

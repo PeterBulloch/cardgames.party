@@ -1,8 +1,24 @@
 #!/bin/sh
-# Refreshes the public local-ip.sh certificate on every start, so it can never expire
-# in place. Falls back to the cached copy in the volume when offline.
+# Production (default): plain HTTP; TLS is terminated by the platform or reverse proxy in front.
+# CARDS_TLS=local-ip: serve HTTPS with the public local-ip.sh certificate for LAN use.
 set -eu
 
+PORT="${PORT:-8000}"
+
+case "${CARDS_TLS:-}" in
+    "")
+        exec uvicorn app.main:app --host 0.0.0.0 --port "$PORT"
+        ;;
+    local-ip)
+        ;;
+    *)
+        echo "ERROR: unknown CARDS_TLS='$CARDS_TLS' (expected empty or 'local-ip')." >&2
+        exit 1
+        ;;
+esac
+
+# Refreshes the public local-ip.sh certificate on every start, so it can never expire
+# in place. Falls back to the cached copy in the volume when offline.
 CERT_DIR="${CARDS_CERT_DIR:-/certs}"
 CERT="$CERT_DIR/server.pem"
 KEY="$CERT_DIR/server.key"
@@ -25,6 +41,6 @@ fi
 
 exec uvicorn app.main:app \
     --host 0.0.0.0 \
-    --port "${PORT:-8443}" \
+    --port "$PORT" \
     --ssl-certfile "$CERT" \
     --ssl-keyfile "$KEY"

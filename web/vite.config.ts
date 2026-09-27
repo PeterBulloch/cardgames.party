@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react'
 const certFile = fileURLToPath(new URL('../certs/server.pem', import.meta.url))
 const keyFile = fileURLToPath(new URL('../certs/server.key', import.meta.url))
 const hasCert = fs.existsSync(certFile) && fs.existsSync(keyFile)
+const version = fs.readFileSync(fileURLToPath(new URL('../VERSION', import.meta.url)), 'utf8').trim()
 
 if (!hasCert) {
     console.warn('[vite] certs/ missing - serving plain HTTP, Web NFC will be unavailable.')
@@ -13,6 +14,9 @@ if (!hasCert) {
 
 export default defineConfig({
     plugins: [react()],
+    define: {
+        __APP_VERSION__: JSON.stringify(version),
+    },
     server: {
         host: '0.0.0.0',
         port: 5173,

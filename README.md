@@ -1,136 +1,92 @@
-# Card Scanner
+# Cards
 
-LAN-only NFC tag reader. A FastAPI server serves a React SPA over HTTPS; Chrome on Android
-uses Web NFC to read tag serial numbers and POSTs them back, where they are kept in memory
-and displayed.
+A self-hosted table for playing real card games with physical cards. The server hosts the
+game state for each lobby and pushes it to every connected phone or screen, so the table
+can track hands, turns, chips and pots while you deal real cards, entered by NFC scan or by
+tapping them in.
 
-## Why HTTPS is mandatory
+Texas Hold'em is the first supported game; the server and client are organised so more games
+can be added alongside it.
 
-`NDEFReader` is only exposed in a secure context, so a plain `http://192.168.x.x` page will
-not have the API at all. This project uses [local-ip.sh](https://local-ip.sh): a public DNS
-service where `192-168-1-10.local-ip.sh` resolves to `192.168.1.10`, published together with
-a genuine Let's Encrypt wildcard certificate **and its private key**. Android already trusts
-Let's Encrypt, so there is nothing to install on the phone, and because DNS points at a
-private address the traffic never leaves your network.
+## Features
 
-> The private key is public by design. The connection is encrypted but not authenticated —
-> fine for tag UIDs on your own LAN, unsuitable for anything sensitive.
+- **Lobbies** — create one with a name, optional password, game and seat count, then share the
+  name. Players join by name as a **player**, **dealer** or **observer**.
+- **Per-viewer state** — the server decides what each client may see. Players see their own
+  hand and public cards; dealers and observers see everything. Observers can switch to a
+  public-only view for a shared TV.
+- **Server-authoritative rules** — clients only render state. The server enforces turn order,
+  deal order, burns, legal bets and stage progression, so nobody can act out of turn.
+- **Texas Hold'em** — rotating button, blinds (with optional automatic doubling), no-limit
+  betting, all-ins with side pots, showdown hand evaluation and split pots.
+- **Chips** — any player or dealer can adjust stacks and pots at any time, to set up a table
+  or correct mistakes. Undo steps back through any number of recent actions.
+- **Card entry** — scan NFC-tagged cards (Chrome on Android) or pick them from a visual
+  suit and rank picker. The server works out where each card goes next.
+- **Tag tools** — `/scanner` reads and writes card NFC tags.
 
-## Run
+## Running in production
 
-Everything — the frontend build, the Python environment, and the certificate — is handled
-inside the container. Docker is the only prerequisite. Run this on the host machine, not
-on the phone; the phone only ever opens a URL.
+Cards ships as a single Docker image that serves the web app and API over **plain HTTP on
+port 8000**. Put it behind anything that terminates HTTPS — a hosting platform, Caddy, nginx,
+Traefik — and it just works. HTTPS matters: phones only allow NFC scanning on secure pages.
 
-```powershell
-./scripts/start.ps1
+With Docker Compose (binds to `127.0.0.1:8000` for a reverse proxy on the same host):
+
+```sh
+docker compose up -d --build
 ```
 
-The script prints the URL to open on the phone, then builds and starts the stack. Add
-`-Detach` to run it in the background, or `-Port 8443` to avoid binding 443.
+Or with plain Docker:
 
-The URL has no port number on purpose: Chrome only defaults to `https://` for a typed
-address when no port is present. Any number of phones can open it at once.
-
-**Use Chrome on Android.** Firefox for Android does not implement Web NFC, so scanning will
-not work there even though the page loads.
-
-Give the host machine a static or DHCP-reserved IP, because the hostname is derived from it.
-
-The port is published on that private address only, never `0.0.0.0`. If the host has no
-private (RFC1918) address, the script refuses to start rather than exposing an
-unauthenticated service to the internet.
-
-The container re-downloads the certificate on every start, so it can never quietly expire.
-If the download fails it falls back to the cached copy in the `certs` volume.
-
-Stop it with `docker compose down`.
-
-## Development
-
-For hot reloading, run the two halves directly instead of in Docker. Vite terminates TLS and
-proxies `/api` to the backend.
-
-```powershell
-./scripts/fetch-cert.ps1                                 # once, into certs/
-python -m venv .venv; .\.venv\Scripts\Activate.ps1
-pip install -r server/requirements.txt
-cd server; uvicorn app.main:app --port 8000 --reload      # terminal 1
-cd web; npm install; npm run dev                          # terminal 2
+```sh
+docker build -t cards .
+docker run -d --name cards --restart unless-stopped -p 8000:8000 cards
 ```
 
-Open `https://<dashed-ip>.local-ip.sh:5173`.
+Check it is up with `curl http://127.0.0.1:8000/api/health`, which also reports the running
+version. The image has a built-in health check.
 
-## API
+### Reverse proxy
 
-| Method | Path                | Purpose                                                   |
-| ------ | ------------------- | --------------------------------------------------------- |
-| GET    | `/api/health`       | Liveness                                                  |
-| POST   | `/api/lobbies`      | Create a lobby and join it; returns `{lobby_id, member_id, token}` |
-| POST   | `/api/lobbies/join` | Join a lobby by name and password; same response          |
-| WS     | `/api/ws`           | Live game state for a lobby member                        |
-| GET    | `/api/scans`        | All retained scans, oldest first                          |
-| POST   | `/api/scans`        | Record a scan (`serialNumber`, `records`)                 |
-| DELETE | `/api/scans`        | Clear all scans                                           |
+The proxy must pass WebSocket upgrades for `/api/ws`. Caddy does this automatically:
 
-The homepage is the lobby; the original scanner and tag writer live at `/scanner`.
-
-### Lobbies
-
-Roles: `player` (sees own hand and public cards, can act), `dealer` (sees everything, can
-act), `observer` (sees everything, cannot act, can switch to a public-only view). Lobbies are
-deleted after 60 minutes with no connected clients or 60 minutes with no activity.
-
-The WebSocket's first frame must be `{"type": "hello", "token": "..."}`. Actions are then sent as:
-
-```json
-{"lobby": "<lobby_id>", "player": "<member_id>", "seq": 1, "sent_at": "<iso time>",
- "action": {"type": "deal_card", "card": "CARD_SPADE_ACE"}}
+```caddyfile
+cards.example.com {
+    reverse_proxy 127.0.0.1:8000
+}
 ```
 
-Lobby actions: `set_view` (observers), `leave`. Any game: `undo` (steps back one action; repeatable,
-cleared when someone joins or leaves). Texas Hold'em: `start_hand`, `deal_card` (the server
-decides whether it goes to the next seat, the burn pile or the board), `fold` / `check` / `call`
-and `bet` / `raise` (with `amount`, the player's total for the street) for the player on turn,
-`award_pots`, `set_blinds` (between hands; optional `auto_double` every `double_every` hands),
-and `set_chips` / `set_pot`, which any player or dealer may use at any time. Betting is no-limit
-with side pots; stacks start at 0 and blinds at 0/0. Any player or dealer may
-submit a move, but only for whoever's turn it is, and only moves legal at that moment. The
-button rotates each hand and sets the blinds; a member with the dealer role handles the cards
-without taking a seat. The server replies with `ack` or
-`error` for the sender's `seq`, then pushes `{"type": "state", "version", "updated_at", "state"}`
-to every client, filtered per viewer. `version` increases with every change so clients discard
-older snapshots; a `seq` that does not increase on a connection is ignored as a replay.
+With nginx, forward `Upgrade` and `Connection` headers and raise `proxy_read_timeout` so idle
+tables are not disconnected.
 
-All state is in memory, so restarting the server discards lobbies and scans. Lobby passwords
-are scrypt-hashed; the scan API has no authentication.
+### Configuration
 
-Run the server tests with `pip install -r server/requirements-dev.txt; cd server; python -m pytest`.
+| Variable              | Default     | Purpose                                                              |
+| --------------------- | ----------- | -------------------------------------------------------------------- |
+| `PORT`                | `8000`      | Port the server listens on inside the container                     |
+| `CARDS_BIND_IP`       | `127.0.0.1` | Host address Compose publishes on; use `0.0.0.0` only behind a firewall or proxy |
+| `CARDS_PORT`          | `8000`      | Host port Compose publishes                                          |
+| `FORWARDED_ALLOW_IPS` | `127.0.0.1` | Proxies trusted for `X-Forwarded-*` headers (Uvicorn setting)        |
+| `CARDS_TLS`           | *(empty)*   | Set to `local-ip` for LAN HTTPS; see [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-## Troubleshooting
+### Operational notes
 
-**The start script says no private address was found.** The PC is not behind NAT. On Korean
-ISP routers the first port is often a bridged IPTV passthrough (labelled `IPTV` / `IP TU`)
-that skips the router entirely and hands out a public ISP address. Move the cable to a
-normal numbered LAN port.
+- **Run one process.** All lobbies live in memory, so run a single container with a single
+  worker. Restarting discards every lobby.
+- **Lobbies expire** after 60 minutes with nobody connected or 60 minutes without activity.
+- **Security.** Lobby passwords are scrypt-hashed and each member gets an unguessable session
+  token. The `/scanner` scan log (`/api/scans`) has no authentication: anyone who can reach
+  the server can read, add or clear scans.
 
-**The hostname will not resolve.** Some routers enable DNS rebinding protection, which
-discards public DNS answers pointing at private IPs. They all support an exception list —
-look for "DNS rebind protection" and allow `local-ip.sh`. Check what actually resolves:
+## Local development and LAN play
 
-```powershell
-Resolve-DnsName 192-168-0-11.local-ip.sh    # should return the PC's LAN IP
-```
+Running on your own network uses [local-ip.sh](https://local-ip.sh) certificates so phones get
+HTTPS without installing anything. See [CONTRIBUTING.md](CONTRIBUTING.md) for LAN hosting, the
+hot-reload dev setup, tests, the WebSocket protocol and how to add a game.
 
-**The phone cannot reach it but the host can.** Check the router does not have AP isolation
-(client isolation) enabled, and allow inbound TCP 443 through Windows Firewall on the
-private network profile.
+## Versioning
 
-**"The proxy server is refusing connections", or the request never appears in
-`docker compose logs`.** The browser is routing through a proxy. Firefox keeps its own proxy
-settings independent of Windows: Settings > search "proxy" > Network Settings, then either
-select "No proxy" or add `local-ip.sh` to "No proxy for". Also check for VPN or proxy
-extensions.
-
-**ERR_EMPTY_RESPONSE.** The URL was opened as `http://`. The server is TLS-only, so the
-scheme must be `https://`. This is why the default URL carries no port number.
+Cards follows [Semantic Versioning](https://semver.org). The current version is in
+[`VERSION`](VERSION), shown on the home page and returned by `/api/health`. Changes are listed
+in [CHANGELOG.md](CHANGELOG.md).

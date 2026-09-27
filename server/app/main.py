@@ -14,6 +14,7 @@ from .models import CreateLobbyIn, JoinLobbyIn, JoinOut, ScanIn, ScanOut
 from .rooms.all_rooms import AllRooms
 from .rooms.room import LobbyError
 from .store import ScanStore
+from .version import __version__
 
 DIST_DIR = Path(
     os.getenv("CARDS_DIST_DIR", Path(__file__).resolve().parents[2] / "web" / "dist")
@@ -46,7 +47,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         task.cancel()
 
 
-app = FastAPI(title="Cards", lifespan=lifespan)
+app = FastAPI(title="Cards", version=__version__, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,7 +59,7 @@ app.add_middleware(
 
 @app.get("/api/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "version": __version__}
 
 
 @app.post("/api/lobbies", response_model=JoinOut, status_code=201)

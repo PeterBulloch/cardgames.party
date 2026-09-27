@@ -147,6 +147,7 @@ export default function Home({ onEnter, notice }: Props) {
             <p className="footer-link">
                 <a href="/scanner">Card scanner and tag writer</a>
             </p>
+            <p className="version">v{__APP_VERSION__}</p>
         </main>
     )
 }

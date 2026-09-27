@@ -1,21 +1,16 @@
 import { useCallback, useState } from 'react'
 import { cardFromTag, cardLabel, cardNames } from '../../cards'
+import EditableNumber from '../../EditableNumber'
 import PlayingCard, { EmptyCardSlot } from '../../PlayingCard'
 import { useNfcScanner } from '../../useNfcScanner'
 import type { LobbyState, NdefRecordDto } from '../../types'
 import type { GameTableProps } from '../types'
-import type { BetKind, DealTarget, TexasHoldEmAction, TexasHoldEmView } from './types'
+import BettingControls from './BettingControls'
+import BlindsForm from './BlindsForm'
+import type { DealTarget, TexasHoldEmAction, TexasHoldEmView } from './types'
 
 const DECK = cardNames.filter((name) => name !== 'CARD_JOKER')
 const BOARD_SIZE = 5
-
-const BET_LABELS: Record<BetKind, string> = {
-    fold: 'Fold',
-    check: 'Check',
-    call: 'Call',
-    bet: 'Bet',
-    raise: 'Raise',
-}
 
 function nameOf(state: LobbyState, memberId: string | null): string {
     return state.members.find((member) => member.member_id === memberId)?.name ?? 'Unknown'
@@ -53,6 +48,8 @@ export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHo
         ...(game.burn.cards ?? []),
         ...game.seats.flatMap((seat) => seat.cards ?? []),
     ])
+    const toActSeat = game.seats.find((seat) => seat.member_id === game.to_act)
+    const names = (ids: string[]) => ids.map((id) => nameOf(state, id)).join(', ')
 
     let status: string
     if (game.phase === 'waiting') status = 'Waiting for the first hand to start.'
@@ -80,6 +77,31 @@ export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHo
             </p>
             {game.dealer?.dedicated && (
                 <p className="status">Dealer: {nameOf(state, game.dealer.member_id)}</p>
+            )}
+            <p className="status">
+                Blinds {game.blinds.small}/{game.blinds.big}
+                {game.blinds.hands_until_double !== null &&
+                    ` · doubling in ${game.blinds.hands_until_double} hand${game.blinds.hands_until_double === 1 ? '' : 's'}`}
+            </p>
+
+            {game.pots.length > 0 && (
+                <section className="pots">
+                    <h2>{game.pots.length > 1 ? 'Pots' : 'Pot'}</h2>
+                    <ul>
+                        {game.pots.map((pot, index) => (
+                            <li key={index}>
+                                <span>{index === 0 ? 'Main' : `Side ${index}`}</span>
+                                <EditableNumber
+                                    value={pot.amount}
+                                    label={`pot ${index + 1}`}
+                                    onSave={canAct ? (amount) => send({ type: 'set_pot', index, amount }) : undefined}
+                                />
+                                {game.pots.length > 1 && <span className="hint">{names(pot.eligible)}</span>}
+                                {pot.winners.length > 0 && <span className="badge badge--hand">→ {names(pot.winners)}</span>}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
             )}
 
             <section className="board">
@@ -129,7 +151,23 @@ export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHo
                                     {seat.member_id === game.big_blind && <span className="badge">BB</span>}
                                     {!seat.in_hand && game.hand_number > 0 && <span className="badge">sitting out</span>}
                                     {seat.folded && <span className="badge">folded</span>}
+                                    {seat.all_in && <span className="badge">all-in</span>}
                                     {hand && <span className="badge badge--hand">{hand.hand_name}</span>}
+                                </div>
+                                <div className="seat__chips">
+                                    <span>
+                                        Chips{' '}
+                                        <EditableNumber
+                                            value={seat.chips}
+                                            label={`chips for ${member?.name ?? 'player'}`}
+                                            onSave={
+                                                canAct
+                                                    ? (chips) => send({ type: 'set_chips', member_id: seat.member_id, chips })
+                                                    : undefined
+                                            }
+                                        />
+                                    </span>
+                                    {seat.street_bet > 0 && <span className="bet">Bet {seat.street_bet}</span>}
                                 </div>
                                 <div className="card-row card-row--small">
                                     {seat.cards
@@ -148,22 +186,16 @@ export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHo
                 <section className="actions">
                     <h2>Actions</h2>
 
-                    {game.phase === 'betting' && game.to_act && (
-                        <>
-                            <p className="status">Acting for {nameOf(state, game.to_act)}:</p>
-                            <div className="controls">
-                                {game.legal_bets.map((kind) => (
-                                    <button
-                                        key={kind}
-                                        type="button"
-                                        className={kind === 'fold' ? 'secondary' : ''}
-                                        onClick={() => send({ type: kind, member_id: game.to_act! })}
-                                    >
-                                        {BET_LABELS[kind]}
-                                    </button>
-                                ))}
-                            </div>
-                        </>
+                    {game.phase === 'betting' && game.to_act && toActSeat && (
+                        <BettingControls
+                            key={`${game.to_act}-${game.current_bet}-${game.stage}`}
+                            memberId={game.to_act}
+                            playerName={nameOf(state, game.to_act)}
+                            options={game.legal_bets}
+                            currentBet={game.current_bet}
+                            streetBet={toActSeat.street_bet}
+                            send={send}
+                        />
                     )}
 
                     {game.phase === 'dealing' && game.next_deal && (
@@ -205,6 +237,11 @@ export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHo
                     {(scanner.error || scanError) && <p className="error">{scanner.error ?? scanError}</p>}
 
                     <div className="controls">
+                        {game.can_award && (
+                            <button type="button" onClick={() => send({ type: 'award_pots' })}>
+                                Award {game.pots.length > 1 ? 'pots' : 'pot'}
+                            </button>
+                        )}
                         {game.can_start_hand && (
                             <button type="button" onClick={() => send({ type: 'start_hand' })}>
                                 {game.hand_number === 0 ? 'Start first hand' : 'Next hand'}
@@ -219,6 +256,8 @@ export default function TexasHoldEmTable({ state, send }: GameTableProps<TexasHo
                             Undo
                         </button>
                     </div>
+
+                    {game.can_set_blinds && <BlindsForm blinds={game.blinds} send={send} />}
                 </section>
             )}
         </>

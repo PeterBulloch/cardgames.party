@@ -90,8 +90,11 @@ The WebSocket's first frame must be `{"type": "hello", "token": "..."}`. Actions
 
 Lobby actions: `set_view` (observers), `leave`. Any game: `undo` (steps back one action; repeatable,
 cleared when someone joins or leaves). Texas Hold'em: `start_hand`, `deal_card` (the server
-decides whether it goes to the next seat, the burn pile or the board), and `fold` / `check` /
-`call` / `bet` / `raise` with the `member_id` of the player on turn. Any player or dealer may
+decides whether it goes to the next seat, the burn pile or the board), `fold` / `check` / `call`
+and `bet` / `raise` (with `amount`, the player's total for the street) for the player on turn,
+`award_pots`, `set_blinds` (between hands; optional `auto_double` every `double_every` hands),
+and `set_chips` / `set_pot`, which any player or dealer may use at any time. Betting is no-limit
+with side pots; stacks start at 0 and blinds at 0/0. Any player or dealer may
 submit a move, but only for whoever's turn it is, and only moves legal at that moment. The
 button rotates each hand and sets the blinds; a member with the dealer role handles the cards
 without taking a seat. The server replies with `ack` or

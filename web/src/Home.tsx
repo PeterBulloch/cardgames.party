@@ -23,7 +23,7 @@ export default function Home({ onEnter, notice }: Props) {
     const [displayName, setDisplayName] = useState('')
     const [role, setRole] = useState<Role>('player')
     const [gameKey, setGameKey] = useState(games[0].key)
-    const [maxPlayers, setMaxPlayers] = useState(games[0].maxPlayers)
+    const [maxPlayers, setMaxPlayers] = useState(String(games[0].maxPlayers))
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const selectedGame = games.find((game) => game.key === gameKey) ?? games[0]
@@ -41,7 +41,7 @@ export default function Home({ onEnter, notice }: Props) {
         try {
             const session =
                 mode === 'create'
-                    ? await createLobby({ ...common, game: gameKey, max_players: maxPlayers })
+                    ? await createLobby({ ...common, game: gameKey, max_players: Number(maxPlayers) })
                     : await joinLobby(common)
             onEnter(session)
         } catch (cause) {
@@ -98,7 +98,7 @@ export default function Home({ onEnter, notice }: Props) {
                                 value={gameKey}
                                 onChange={(e) => {
                                     setGameKey(e.target.value)
-                                    setMaxPlayers(games.find((g) => g.key === e.target.value)?.maxPlayers ?? 2)
+                                    setMaxPlayers(String(games.find((g) => g.key === e.target.value)?.maxPlayers ?? 2))
                                 }}
                             >
                                 {games.map((game) => (
@@ -115,7 +115,8 @@ export default function Home({ onEnter, notice }: Props) {
                                 min={selectedGame.minPlayers}
                                 max={selectedGame.maxPlayers}
                                 value={maxPlayers}
-                                onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                                inputMode="numeric"
+                                onChange={(e) => setMaxPlayers(e.target.value)}
                                 required
                             />
                         </label>

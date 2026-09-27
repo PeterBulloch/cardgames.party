@@ -453,6 +453,71 @@ select {
     font-weight: 700;
 }
 
+.editable-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.editable-number input {
+    width: 6rem;
+    padding: 0.35rem 0.5rem;
+}
+
+button.icon {
+    flex: none;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.8rem;
+    background: transparent;
+    color: #9aa0a6;
+}
+
+.seat__chips {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #9aa0a6;
+}
+
+.seat__chips .bet {
+    color: #f5b06a;
+    font-weight: 600;
+}
+
+.pots ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.pots li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.betting {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.sized-bet input[type="range"] {
+    flex: 1;
+    padding: 0;
+}
+
+.sized-bet input[type="number"] {
+    width: 5.5rem;
+}
+
 .seat__head {
     display: flex;
     align-items: center;

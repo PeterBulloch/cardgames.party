@@ -15,6 +15,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no cardgames@192.168.0.24 '
             cd /home/cardgames/cardgames.party &&
             git pull origin main &&
-            docker-compose down &&
-            docker-compose up -d
+            docker compose down &&
+            docker compose up --build -d
           '

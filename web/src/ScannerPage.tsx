@@ -16,7 +16,7 @@ function mergeScan(scans: Scan[], incoming: Scan): Scan[] {
     return scans.some((scan) => scan.id === incoming.id) ? scans : [incoming, ...scans]
 }
 
-export default function App() {
+export default function ScannerPage() {
     const [scans, setScans] = useState<Scan[]>([])
     const [apiError, setApiError] = useState<string | null>(null)
     const [cardToWrite, setCardToWrite] = useState(cardNames[0] ?? '')

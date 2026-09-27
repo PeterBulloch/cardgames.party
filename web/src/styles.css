@@ -231,3 +231,269 @@ button.secondary {
     padding: 0.75rem;
     border-radius: 0.6rem;
 }
+
+.app--table {
+    max-width: 48rem;
+}
+
+.notice {
+    background: #1f2a3a;
+    border: 1px solid #2f4b6b;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1.25rem 0;
+}
+
+.tabs button.secondary {
+    flex: 1;
+}
+
+.form,
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.form label,
+.actions label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    color: #9aa0a6;
+}
+
+.hint {
+    color: #6b7076;
+}
+
+input,
+select {
+    padding: 0.8rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.6rem;
+    border: 1px solid #2a2f36;
+    background: #1c1f24;
+    color: #e8eaed;
+    min-width: 0;
+}
+
+.controls select {
+    flex: 1;
+}
+
+.footer-link {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.footer-link a {
+    color: #9aa0a6;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.conn--open {
+    color: #7ee2a8;
+}
+
+.conn--connecting,
+.conn--closed {
+    color: #f5b06a;
+}
+
+.stages {
+    display: flex;
+    gap: 0.35rem;
+    list-style: none;
+    padding: 0;
+    margin: 1.25rem 0 0;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+}
+
+.stages li {
+    flex: 1;
+    text-align: center;
+    padding: 0.4rem 0.2rem;
+    border-radius: 0.4rem;
+    background: #1c1f24;
+    color: #6b7076;
+}
+
+.stages .stages__current {
+    background: #4a8cff;
+    color: #fff;
+    font-weight: 600;
+}
+
+.burn {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 0.85rem;
+}
+
+.card-row {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.playing-card {
+    position: relative;
+    width: 4rem;
+    aspect-ratio: 5 / 7;
+    border-radius: 0.35rem;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #14161a;
+    font-size: 0.6rem;
+}
+
+.card-row--small .playing-card {
+    width: 3rem;
+}
+
+.playing-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0.15rem;
+}
+
+.playing-card--back {
+    background: repeating-linear-gradient(45deg, #2b4f8f, #2b4f8f 4px, #1f3a6b 4px, #1f3a6b 8px);
+    border: 2px solid #fff;
+}
+
+.playing-card--empty {
+    background: transparent;
+    border: 1px dashed #2a2f36;
+}
+
+.playing-card__remove {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    flex: none;
+    width: 1.3rem;
+    height: 1.3rem;
+    padding: 0;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    line-height: 1;
+    background: #6b2f35;
+}
+
+.seats {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: 0.5rem;
+}
+
+.seat {
+    background: #1c1f24;
+    border: 1px solid #2a2f36;
+    border-radius: 0.6rem;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.seat--you {
+    border-color: #4a8cff;
+}
+
+.seat--folded {
+    opacity: 0.55;
+}
+
+.seat--winner {
+    border-color: #7ee2a8;
+    box-shadow: 0 0 0 1px #7ee2a8;
+}
+
+.seat__head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.seat__head button {
+    margin-left: auto;
+}
+
+button.small {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+}
+
+.dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: #6b7076;
+}
+
+.dot--on {
+    background: #7ee2a8;
+}
+
+.badge {
+    font-size: 0.75rem;
+    background: #2a2f36;
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+}
+
+.badge--hand {
+    background: #1f3a2b;
+    color: #7ee2a8;
+}
+
+.onlookers {
+    color: #9aa0a6;
+    font-size: 0.85rem;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.showdown p {
+    margin: 0;
+}
+
+.actions {
+    margin-top: 1.5rem;
+    border-top: 1px solid #2a2f36;
+    padding-top: 0.5rem;
+}
+
+.actions .controls {
+    margin: 0;
+}

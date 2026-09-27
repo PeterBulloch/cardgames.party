@@ -63,15 +63,42 @@ Open `https://<dashed-ip>.local-ip.sh:5173`.
 
 ## API
 
-| Method | Path          | Purpose                                  |
-| ------ | ------------- | ---------------------------------------- |
-| GET    | `/api/health` | Liveness                                 |
-| GET    | `/api/scans`  | All retained scans, oldest first         |
-| POST   | `/api/scans`  | Record a scan (`serialNumber`, `records`) |
-| DELETE | `/api/scans`  | Clear all scans                          |
+| Method | Path                | Purpose                                                   |
+| ------ | ------------------- | --------------------------------------------------------- |
+| GET    | `/api/health`       | Liveness                                                  |
+| POST   | `/api/lobbies`      | Create a lobby and join it; returns `{lobby_id, member_id, token}` |
+| POST   | `/api/lobbies/join` | Join a lobby by name and password; same response          |
+| WS     | `/api/ws`           | Live game state for a lobby member                        |
+| GET    | `/api/scans`        | All retained scans, oldest first                          |
+| POST   | `/api/scans`        | Record a scan (`serialNumber`, `records`)                 |
+| DELETE | `/api/scans`        | Clear all scans                                           |
 
-Storage is a 500-entry in-memory ring; restarting the server discards everything. There is
-no authentication, so anyone on the network can read and post scans.
+The homepage is the lobby; the original scanner and tag writer live at `/scanner`.
+
+### Lobbies
+
+Roles: `player` (sees own hand and public cards, can act), `dealer` (sees everything, can
+act), `observer` (sees everything, cannot act, can switch to a public-only view). Any acting
+role may deal to any seat, mirroring a real table. Lobbies are deleted after 60 minutes with
+no connected clients or 60 minutes with no activity.
+
+The WebSocket's first frame must be `{"type": "hello", "token": "..."}`. Actions are then sent as:
+
+```json
+{"lobby": "<lobby_id>", "player": "<member_id>", "seq": 1, "sent_at": "<iso time>",
+ "action": {"type": "deal_card", "card": "CARD_SPADE_ACE", "target": {"kind": "seat", "member_id": "..."}}}
+```
+
+Action types: `deal_card` (target `seat`, `board` or `burn`), `return_card`, `fold`, `unfold`,
+`next_stage`, `new_hand`, `set_view` (observers), `leave`. The server replies with `ack` or
+`error` for the sender's `seq`, then pushes `{"type": "state", "version", "updated_at", "state"}`
+to every client, filtered per viewer. `version` increases with every change so clients discard
+older snapshots; a `seq` that does not increase on a connection is ignored as a replay.
+
+All state is in memory, so restarting the server discards lobbies and scans. Lobby passwords
+are scrypt-hashed; the scan API has no authentication.
+
+Run the server tests with `pip install -r server/requirements-dev.txt; cd server; python -m pytest`.
 
 ## Troubleshooting
 

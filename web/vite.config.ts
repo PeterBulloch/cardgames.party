@@ -20,7 +20,7 @@ export default defineConfig({
             ? { cert: fs.readFileSync(certFile), key: fs.readFileSync(keyFile) }
             : undefined,
         proxy: {
-            '/api': 'http://127.0.0.1:8000',
+            '/api': { target: 'http://127.0.0.1:8000', ws: true },
         },
     },
 })

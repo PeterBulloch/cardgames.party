@@ -38,11 +38,15 @@ function normalise(value: string | null | undefined): string | null {
 
 /** The card code carried by a scan, or null when the tag holds something else. */
 export function cardNameFor(scan: Scan): string | null {
-    for (const record of scan.records) {
+    return cardFromTag(scan.serialNumber, scan.records)
+}
+
+export function cardFromTag(serialNumber: string, records: Scan['records']): string | null {
+    for (const record of records) {
         const name = normalise(record.text)
         if (name) return name
     }
-    return normalise(scan.serialNumber)
+    return normalise(serialNumber)
 }
 
 export function cardLabel(name: string): string {

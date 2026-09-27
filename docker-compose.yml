@@ -1,4 +1,4 @@
-# Production: plain HTTP on port 8000, for a platform or reverse proxy that terminates HTTPS.
+# Production: plain HTTP on port 80, for a platform or reverse proxy that terminates HTTPS.
 # LAN use with local-ip.sh certificates layers docker-compose.local.yml on top (see CONTRIBUTING.md).
 services:
   cards:
@@ -6,5 +6,5 @@ services:
     image: cards
     ports:
       # Loopback by default so only a reverse proxy on this host can reach the plain-HTTP port.
-      - "${CARDS_BIND_IP:-127.0.0.1}:${CARDS_PORT:-8000}:8000"
+      - "${CARDS_BIND_IP:-127.0.0.1}:${CARDS_PORT:-80}:8000"
     restart: unless-stopped
